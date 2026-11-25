@@ -1,0 +1,565 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Authenticated user account and assigned RBAC role in OnTravel.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Authentication UID.",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name shown in profile and role panels.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified user email address (PII, restricted to owner and admin).",
+          "minLength": 3,
+          "maxLength": 200
+        },
+        "role": {
+          "type": "string",
+          "enum": ["user", "operator", "admin"],
+          "description": "Server-validated user role controlling workspace access."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last-updated timestamp."
+        }
+      },
+      "required": ["uid", "displayName", "email", "role", "createdAt", "updatedAt"]
+    },
+    "Destination": {
+      "title": "Destination",
+      "description": "Aceh travel destination catalog record.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "nama": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "kategori": {
+          "type": "string",
+          "enum": ["religi", "alam", "bahari", "sejarah", "budaya", "kuliner"]
+        },
+        "wilayah": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "deskripsi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "alamat": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "estimasiBiaya": {
+          "type": "number"
+        },
+        "fasilitas": {
+          "type": "array"
+        },
+        "fasilitasIbadah": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "unggulan": {
+          "type": "boolean"
+        },
+        "verifikasi": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 800
+        },
+        "mapsUrl": {
+          "type": "string",
+          "maxLength": 800
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"]
+        },
+        "updatedByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "nama",
+        "kategori",
+        "wilayah",
+        "deskripsi",
+        "estimasiBiaya",
+        "unggulan",
+        "visibility",
+        "updatedByUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Culinary": {
+      "title": "Culinary",
+      "description": "Aceh culinary or local SME product listing.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "nama": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "kategori": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "wilayah": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "harga": {
+          "type": "number"
+        },
+        "statusSertifikasiHalal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "sumberVerifikasi": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "kontak": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 800
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"]
+        },
+        "updatedByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "nama",
+        "kategori",
+        "wilayah",
+        "harga",
+        "statusSertifikasiHalal",
+        "visibility",
+        "updatedByUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Stay": {
+      "title": "Stay",
+      "description": "Muslim-friendly accommodation listing in Aceh.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "nama": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "wilayah": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "hargaPerMalam": {
+          "type": "number"
+        },
+        "fasilitas": {
+          "type": "array"
+        },
+        "fasilitasRamahMuslim": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "kontak": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 800
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"]
+        },
+        "updatedByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "nama",
+        "wilayah",
+        "hargaPerMalam",
+        "visibility",
+        "updatedByUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TravelPackage": {
+      "title": "TravelPackage",
+      "description": "Curated multi-day Aceh travel package.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "nama": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "durasi": {
+          "type": "integer"
+        },
+        "daftarDestinasi": {
+          "type": "array"
+        },
+        "estimasiBiaya": {
+          "type": "number"
+        },
+        "deskripsi": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "minat": {
+          "type": "array"
+        },
+        "wilayah": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80
+        },
+        "imageUrl": {
+          "type": "string",
+          "maxLength": 800
+        },
+        "visibility": {
+          "type": "string",
+          "enum": ["public"]
+        },
+        "updatedByUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "nama",
+        "durasi",
+        "estimasiBiaya",
+        "deskripsi",
+        "wilayah",
+        "visibility",
+        "updatedByUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UserFavorite": {
+      "title": "UserFavorite",
+      "description": "Saved user bookmark for a destination, culinary item, or stay.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "itemId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "tipeItem": {
+          "type": "string",
+          "enum": ["destinasi", "kuliner", "akomodasi"]
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "itemId", "tipeItem", "ownerUid", "createdAt"]
+    },
+    "UserItinerary": {
+      "title": "UserItinerary",
+      "description": "Personal multi-day travel itinerary and budget estimate.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "namaPerjalanan": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "tanggalMulai": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "jumlahHari": {
+          "type": "integer"
+        },
+        "jumlahWisatawan": {
+          "type": "integer"
+        },
+        "daftarAktivitas": {
+          "type": "array"
+        },
+        "foodPerPersonPerDay": {
+          "type": "number"
+        },
+        "hotelPerNight": {
+          "type": "number"
+        },
+        "rooms": {
+          "type": "integer"
+        },
+        "transportBudget": {
+          "type": "number"
+        },
+        "totalAnggaran": {
+          "type": "number"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "ownerUid",
+        "namaPerjalanan",
+        "tanggalMulai",
+        "jumlahHari",
+        "jumlahWisatawan",
+        "daftarAktivitas",
+        "foodPerPersonPerDay",
+        "hotelPerNight",
+        "rooms",
+        "transportBudget",
+        "totalAnggaran",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "VerificationReport": {
+      "title": "VerificationReport",
+      "description": "Field verification or halal status update request submitted by users and reviewed by operators/admins.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "targetType": {
+          "type": "string",
+          "enum": ["destinations", "culinary", "stays"]
+        },
+        "targetId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "targetName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 140
+        },
+        "note": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 600
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "in_review", "verified", "rejected"]
+        },
+        "resolutionNote": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "authorUid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "authorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "reviewedByUid": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "targetType",
+        "targetId",
+        "targetName",
+        "note",
+        "status",
+        "resolutionNote",
+        "authorUid",
+        "authorName",
+        "reviewedByUid",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "User profiles and RBAC role assignments (admin/operator/user)."
+    },
+    "/users/{userId}/favorites/{favId}": {
+      "schema": { "$ref": "#/entities/UserFavorite" },
+      "description": "User-owned saved favorites."
+    },
+    "/users/{userId}/itineraries/{planId}": {
+      "schema": { "$ref": "#/entities/UserItinerary" },
+      "description": "User-owned trip itinerary and budget plan."
+    },
+    "/destinations/{itemId}": {
+      "schema": { "$ref": "#/entities/Destination" },
+      "description": "Public destination catalog editable by operator and admin."
+    },
+    "/culinary/{itemId}": {
+      "schema": { "$ref": "#/entities/Culinary" },
+      "description": "Public culinary catalog editable by operator and admin."
+    },
+    "/stays/{itemId}": {
+      "schema": { "$ref": "#/entities/Stay" },
+      "description": "Public stays catalog editable by operator and admin."
+    },
+    "/packages/{itemId}": {
+      "schema": { "$ref": "#/entities/TravelPackage" },
+      "description": "Public travel packages catalog editable by operator and admin."
+    },
+    "/verificationReports/{reportId}": {
+      "schema": { "$ref": "#/entities/VerificationReport" },
+      "description": "User-submitted verification updates processed by operators and admins."
+    }
+  }
+}

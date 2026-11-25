@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#073f37" />
+    <title>OnTravel — Jelajahi Aceh</title>
+    <meta
+      name="description"
+      content="Platform panduan perjalanan ramah Muslim di Aceh: jelajahi destinasi, kuliner lokal, akomodasi, paket wisata, dan perencana itinerary."
+    />
+    <meta property="og:title" content="OnTravel — Jelajahi Aceh" />
+    <meta
+      property="og:description"
+      content="Platform panduan perjalanan ramah Muslim di Aceh: jelajahi destinasi, kuliner lokal, akomodasi, paket wisata, dan perencana itinerary."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="gmpQuotaRoot"></div>
+    <a class="skip-link" href="#app">Lewati ke konten utama</a>
+
+    <header class="topbar">
+      <div class="shell nav">
+        <a class="brand" href="#home" data-view="home" aria-label="OnTravel Beranda">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span class="brand-name">OnTravel</span>
+        </a>
+
+        <nav class="navlinks" id="navlinks" aria-label="Navigasi utama">
+          <button type="button" data-view="home" class="active" data-i18n="navHome">Beranda</button>
+          <button type="button" data-view="destinations" data-i18n="navExplore">Destinasi</button>
+          <button type="button" data-view="culinary" data-i18n="navCulinary">Kuliner</button>
+          <button type="button" data-view="stays" data-i18n="navStays">Akomodasi</button>
+          <button type="button" data-view="packages" data-i18n="navPackages">Paket</button>
+          <button type="button" data-view="planner" data-i18n="navPlanner">Rencana</button>
+          <button type="button" data-view="favorites" data-i18n="navFavorites">Favorit</button>
+          <button type="button" data-view="operator" id="navOperatorBtn" data-i18n="navOperator" hidden>Operasional</button>
+          <button type="button" data-view="admin" id="navAdminBtn" data-i18n="navAdmin" hidden>Admin</button>
+        </nav>
+
+        <div class="nav-end">
+          <button
+            type="button"
+            class="nav-action auth-nav-btn"
+            data-view="login"
+            id="authNavBtn"
+          >
+            Masuk
+          </button>
+          <button
+            type="button"
+            class="nav-action lang-btn"
+            data-action="toggle-lang"
+            id="langBtn"
+            aria-label="Ubah bahasa"
+          >
+            EN
+          </button>
+          <button
+            type="button"
+            class="menu-toggle"
+            data-action="menu"
+            id="menuToggle"
+            aria-label="Buka menu navigasi"
+            aria-expanded="false"
+            aria-controls="navlinks"
+          >
+            ☰
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main id="app" class="shell" tabindex="-1" aria-live="polite"></main>
+
+    <footer class="footer">
+      <div class="shell">
+        <div class="footer-grid">
+          <div>
+            <h3>OnTravel.</h3>
+            <p data-i18n="footerAbout">
+              Temukan keindahan Aceh dengan perjalanan yang lebih terencana, nyaman, dan menghargai kearifan lokal.
+            </p>
+          </div>
+          <div>
+            <b data-i18n="footerExplore">Jelajahi</b>
+            <a href="#destinations" data-view="destinations" data-i18n="navExplore">Destinasi</a>
+            <a href="#culinary" data-view="culinary" data-i18n="navCulinary">Kuliner</a>
+            <a href="#stays" data-view="stays" data-i18n="navStays">Akomodasi</a>
+            <a href="#packages" data-view="packages" data-i18n="navPackages">Paket wisata</a>
+          </div>
+          <div>
+            <b data-i18n="footerNote">Catatan informasi</b>
+            <p data-i18n="footerDisclaimer">
+              Konten adalah data demonstrasi. Tarif, jam operasional, fasilitas, dan status sertifikasi harus dikonfirmasi kepada sumber resmi atau penyedia.
+            </p>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© 2026 OnTravel · <span data-i18n="demoLabel">Aplikasi demonstrasi</span> · <span data-i18n="photoCredit">Foto destinasi &amp; kuliner berlisensi bebas dari Wikimedia Commons.</span></span>
+          <span data-i18n="noAffiliation">Bukan situs resmi pemerintah atau lembaga sertifikasi.</span>
+        </div>
+      </div>
+    </footer>
+
+    <div id="modalRoot"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

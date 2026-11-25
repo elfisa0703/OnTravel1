@@ -1,0 +1,444 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 4.1: Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isBootstrappedAdmin() {
+      return isVerifiedUser() && request.auth.token.email == 'fiansa2002@gmail.com';
+    }
+
+    function userDocExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function userRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isBootstrappedAdmin() || (isVerifiedUser() && userDocExists() && userRole() == 'admin');
+    }
+
+    function isOperatorOrAdmin() {
+      return isBootstrappedAdmin() || (isVerifiedUser() && userDocExists() && (userRole() == 'operator' || userRole() == 'admin'));
+    }
+
+    function isValidHttpsOrEmpty(val, maxLen) {
+      return val is string && val.size() <= maxLen && (val == '' || val.matches('^https://.*$'));
+    }
+
+    // Entity validation blueprints
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'displayName', 'email', 'role', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'displayName', 'email', 'role', 'createdAt', 'updatedAt'])
+        && isValidId(data.uid)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 120
+        && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+        && data.role in ['user', 'operator', 'admin']
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidDestination(data) {
+      return data.keys().hasAll([
+          'id', 'nama', 'kategori', 'wilayah', 'deskripsi',
+          'estimasiBiaya', 'unggulan', 'visibility', 'updatedByUid', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'nama', 'kategori', 'wilayah', 'deskripsi', 'alamat',
+          'estimasiBiaya', 'fasilitas', 'fasilitasIbadah', 'unggulan',
+          'verifikasi', 'imageUrl', 'mapsUrl', 'visibility', 'updatedByUid',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.nama is string && data.nama.size() >= 1 && data.nama.size() <= 140
+        && data.kategori in ['religi', 'alam', 'bahari', 'sejarah', 'budaya', 'kuliner']
+        && data.wilayah is string && data.wilayah.size() >= 2 && data.wilayah.size() <= 80
+        && data.deskripsi is string && data.deskripsi.size() >= 1 && data.deskripsi.size() <= 800
+        && (!('alamat' in data) || (data.alamat is string && data.alamat.size() <= 240))
+        && data.estimasiBiaya is number && data.estimasiBiaya >= 0 && data.estimasiBiaya <= 100000000
+        && (!('fasilitas' in data) || (data.fasilitas is list && data.fasilitas.size() <= 15 && (data.fasilitas.size() == 0 || (data.fasilitas[0] is string && data.fasilitas[0].size() <= 120))))
+        && (!('fasilitasIbadah' in data) || (data.fasilitasIbadah is string && data.fasilitasIbadah.size() <= 500))
+        && data.unggulan is bool
+        && (!('verifikasi' in data) || (data.verifikasi is string && data.verifikasi.size() <= 500))
+        && (!('imageUrl' in data) || isValidHttpsOrEmpty(data.imageUrl, 800))
+        && (!('mapsUrl' in data) || isValidHttpsOrEmpty(data.mapsUrl, 800))
+        && data.visibility == 'public'
+        && isValidId(data.updatedByUid) && data.updatedByUid == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidCulinary(data) {
+      return data.keys().hasAll([
+          'id', 'nama', 'kategori', 'wilayah', 'harga',
+          'statusSertifikasiHalal', 'visibility', 'updatedByUid', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'nama', 'kategori', 'wilayah', 'harga', 'statusSertifikasiHalal',
+          'sumberVerifikasi', 'kontak', 'imageUrl', 'visibility', 'updatedByUid',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.nama is string && data.nama.size() >= 1 && data.nama.size() <= 140
+        && data.kategori is string && data.kategori.size() >= 1 && data.kategori.size() <= 80
+        && data.wilayah is string && data.wilayah.size() >= 2 && data.wilayah.size() <= 80
+        && data.harga is number && data.harga >= 0 && data.harga <= 100000000
+        && data.statusSertifikasiHalal is string && data.statusSertifikasiHalal.size() >= 1 && data.statusSertifikasiHalal.size() <= 80
+        && (!('sumberVerifikasi' in data) || (data.sumberVerifikasi is string && data.sumberVerifikasi.size() <= 400))
+        && (!('kontak' in data) || (data.kontak is string && data.kontak.size() <= 160))
+        && (!('imageUrl' in data) || isValidHttpsOrEmpty(data.imageUrl, 800))
+        && data.visibility == 'public'
+        && isValidId(data.updatedByUid) && data.updatedByUid == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStay(data) {
+      return data.keys().hasAll([
+          'id', 'nama', 'wilayah', 'hargaPerMalam',
+          'visibility', 'updatedByUid', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'nama', 'wilayah', 'hargaPerMalam', 'fasilitas',
+          'fasilitasRamahMuslim', 'kontak', 'imageUrl', 'visibility',
+          'updatedByUid', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.nama is string && data.nama.size() >= 1 && data.nama.size() <= 140
+        && data.wilayah is string && data.wilayah.size() >= 2 && data.wilayah.size() <= 80
+        && data.hargaPerMalam is number && data.hargaPerMalam >= 0 && data.hargaPerMalam <= 100000000
+        && (!('fasilitas' in data) || (data.fasilitas is list && data.fasilitas.size() <= 15 && (data.fasilitas.size() == 0 || (data.fasilitas[0] is string && data.fasilitas[0].size() <= 120))))
+        && (!('fasilitasRamahMuslim' in data) || (data.fasilitasRamahMuslim is string && data.fasilitasRamahMuslim.size() <= 500))
+        && (!('kontak' in data) || (data.kontak is string && data.kontak.size() <= 160))
+        && (!('imageUrl' in data) || isValidHttpsOrEmpty(data.imageUrl, 800))
+        && data.visibility == 'public'
+        && isValidId(data.updatedByUid) && data.updatedByUid == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPackage(data) {
+      return data.keys().hasAll([
+          'id', 'nama', 'durasi', 'estimasiBiaya', 'deskripsi',
+          'wilayah', 'visibility', 'updatedByUid', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'nama', 'durasi', 'daftarDestinasi', 'estimasiBiaya',
+          'deskripsi', 'minat', 'wilayah', 'imageUrl', 'visibility',
+          'updatedByUid', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.nama is string && data.nama.size() >= 1 && data.nama.size() <= 140
+        && data.durasi is int && data.durasi >= 1 && data.durasi <= 14
+        && (!('daftarDestinasi' in data) || (data.daftarDestinasi is list && data.daftarDestinasi.size() <= 12 && (data.daftarDestinasi.size() == 0 || (data.daftarDestinasi[0] is string && data.daftarDestinasi[0].size() <= 128))))
+        && data.estimasiBiaya is number && data.estimasiBiaya >= 0 && data.estimasiBiaya <= 1000000000
+        && data.deskripsi is string && data.deskripsi.size() >= 1 && data.deskripsi.size() <= 800
+        && (!('minat' in data) || (data.minat is list && data.minat.size() <= 8 && (data.minat.size() == 0 || (data.minat[0] is string && data.minat[0].size() <= 40))))
+        && data.wilayah is string && data.wilayah.size() >= 2 && data.wilayah.size() <= 80
+        && (!('imageUrl' in data) || isValidHttpsOrEmpty(data.imageUrl, 800))
+        && data.visibility == 'public'
+        && isValidId(data.updatedByUid) && data.updatedByUid == request.auth.uid
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidFavorite(data) {
+      return data.keys().hasAll(['id', 'itemId', 'tipeItem', 'ownerUid', 'createdAt'])
+        && data.keys().hasOnly(['id', 'itemId', 'tipeItem', 'ownerUid', 'createdAt'])
+        && isValidId(data.id)
+        && isValidId(data.itemId)
+        && data.tipeItem in ['destinasi', 'kuliner', 'akomodasi']
+        && isValidId(data.ownerUid) && data.ownerUid == request.auth.uid
+        && data.createdAt is timestamp;
+    }
+
+    function isValidItinerary(data) {
+      return data.keys().hasAll([
+          'id', 'ownerUid', 'namaPerjalanan', 'tanggalMulai', 'jumlahHari',
+          'jumlahWisatawan', 'daftarAktivitas', 'foodPerPersonPerDay',
+          'hotelPerNight', 'rooms', 'transportBudget', 'totalAnggaran',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'ownerUid', 'namaPerjalanan', 'tanggalMulai', 'jumlahHari',
+          'jumlahWisatawan', 'daftarAktivitas', 'foodPerPersonPerDay',
+          'hotelPerNight', 'rooms', 'transportBudget', 'totalAnggaran',
+          'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && isValidId(data.ownerUid) && data.ownerUid == request.auth.uid
+        && data.namaPerjalanan is string && data.namaPerjalanan.size() >= 1 && data.namaPerjalanan.size() <= 160
+        && data.tanggalMulai is string && data.tanggalMulai.size() >= 8 && data.tanggalMulai.size() <= 20
+        && data.jumlahHari is int && data.jumlahHari >= 1 && data.jumlahHari <= 5
+        && data.jumlahWisatawan is int && data.jumlahWisatawan >= 1 && data.jumlahWisatawan <= 30
+        && data.daftarAktivitas is list && data.daftarAktivitas.size() <= 30
+        && (data.daftarAktivitas.size() == 0 || (data.daftarAktivitas[0] is map && data.daftarAktivitas[0].keys().hasOnly(['id', 'itemId', 'day'])))
+        && data.foodPerPersonPerDay is number && data.foodPerPersonPerDay >= 0 && data.foodPerPersonPerDay <= 100000000
+        && data.hotelPerNight is number && data.hotelPerNight >= 0 && data.hotelPerNight <= 100000000
+        && data.rooms is int && data.rooms >= 0 && data.rooms <= 20
+        && data.transportBudget is number && data.transportBudget >= 0 && data.transportBudget <= 1000000000
+        && data.totalAnggaran is number && data.totalAnggaran >= 0 && data.totalAnggaran <= 10000000000
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidReport(data) {
+      return data.keys().hasAll([
+          'id', 'targetType', 'targetId', 'targetName', 'note',
+          'status', 'resolutionNote', 'authorUid', 'authorName',
+          'reviewedByUid', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'id', 'targetType', 'targetId', 'targetName', 'note',
+          'status', 'resolutionNote', 'authorUid', 'authorName',
+          'reviewedByUid', 'createdAt', 'updatedAt'
+        ])
+        && isValidId(data.id)
+        && data.targetType in ['destinations', 'culinary', 'stays']
+        && isValidId(data.targetId)
+        && data.targetName is string && data.targetName.size() >= 1 && data.targetName.size() <= 140
+        && data.note is string && data.note.size() >= 5 && data.note.size() <= 600
+        && data.status in ['pending', 'in_review', 'verified', 'rejected']
+        && data.resolutionNote is string && data.resolutionNote.size() <= 400
+        && isValidId(data.authorUid)
+        && data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 120
+        && data.reviewedByUid is string && data.reviewedByUid.size() <= 128
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // Users & Roles (PII isolated to owner + admin)
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (isOwner(userId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.uid == request.auth.uid || isBootstrappedAdmin());
+      allow create: if isVerifiedUser()
+        && isValidId(userId)
+        && isOwner(userId)
+        && isValidUser(incoming())
+        && incoming().uid == userId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && (incoming().role == 'user' || (isBootstrappedAdmin() && incoming().role == 'admin'));
+      allow update: if isVerifiedUser()
+        && isValidId(userId)
+        && isValidUser(incoming())
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (isOwner(userId)
+            && incoming().role == existing().role
+            && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'updatedAt']))
+          || (isAdmin()
+            && incoming().diff(existing()).affectedKeys().hasOnly(['role', 'displayName', 'updatedAt']))
+        );
+      allow delete: if isAdmin() && isValidId(userId);
+
+      // User-owned favorites
+      match /favorites/{favId} {
+        allow get: if isSignedIn() && isValidId(userId) && isValidId(favId) && isOwner(userId)
+          && exists(/databases/$(database)/documents/users/$(userId));
+        allow list: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(favId)
+          && isOwner(userId)
+          && exists(/databases/$(database)/documents/users/$(userId))
+          && isValidFavorite(incoming())
+          && incoming().id == favId
+          && incoming().createdAt == request.time;
+        allow update: if false;
+        allow delete: if isVerifiedUser() && isValidId(userId) && isValidId(favId) && isOwner(userId);
+      }
+
+      // User-owned itineraries
+      match /itineraries/{planId} {
+        allow get: if isSignedIn() && isValidId(userId) && isValidId(planId) && isOwner(userId)
+          && exists(/databases/$(database)/documents/users/$(userId));
+        allow list: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(planId)
+          && isOwner(userId)
+          && exists(/databases/$(database)/documents/users/$(userId))
+          && isValidItinerary(incoming())
+          && incoming().id == planId
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(planId)
+          && isOwner(userId)
+          && isValidItinerary(incoming())
+          && incoming().id == existing().id
+          && incoming().ownerUid == existing().ownerUid
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'namaPerjalanan', 'tanggalMulai', 'jumlahHari', 'jumlahWisatawan',
+            'daftarAktivitas', 'foodPerPersonPerDay', 'hotelPerNight', 'rooms',
+            'transportBudget', 'totalAnggaran', 'updatedAt'
+          ]);
+        allow delete: if isVerifiedUser() && isValidId(userId) && isValidId(planId) && isOwner(userId);
+      }
+    }
+
+    // Public catalog collections: readable where visibility == 'public', writable by Operator/Admin, deletable only by Admin
+    match /destinations/{itemId} {
+      allow get: if isValidId(itemId) && (resource.data.visibility == 'public' || isOperatorOrAdmin());
+      allow list: if resource.data.visibility == 'public' || isBootstrappedAdmin();
+      allow create: if isOperatorOrAdmin()
+        && isValidId(itemId)
+        && isValidDestination(incoming())
+        && incoming().id == itemId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isOperatorOrAdmin()
+        && isValidId(itemId)
+        && isValidDestination(incoming())
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'nama', 'kategori', 'wilayah', 'deskripsi', 'alamat',
+          'estimasiBiaya', 'fasilitas', 'fasilitasIbadah', 'unggulan',
+          'verifikasi', 'imageUrl', 'mapsUrl', 'visibility', 'updatedByUid', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(itemId);
+    }
+
+    match /culinary/{itemId} {
+      allow get: if isValidId(itemId) && (resource.data.visibility == 'public' || isOperatorOrAdmin());
+      allow list: if resource.data.visibility == 'public' || isBootstrappedAdmin();
+      allow create: if isOperatorOrAdmin()
+        && isValidId(itemId)
+        && isValidCulinary(incoming())
+        && incoming().id == itemId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isOperatorOrAdmin()
+        && isValidId(itemId)
+        && isValidCulinary(incoming())
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'nama', 'kategori', 'wilayah', 'harga', 'statusSertifikasiHalal',
+          'sumberVerifikasi', 'kontak', 'imageUrl', 'visibility', 'updatedByUid', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(itemId);
+    }
+
+    match /stays/{itemId} {
+      allow get: if isValidId(itemId) && (resource.data.visibility == 'public' || isOperatorOrAdmin());
+      allow list: if resource.data.visibility == 'public' || isBootstrappedAdmin();
+      allow create: if isOperatorOrAdmin()
+        && isValidId(itemId)
+        && isValidStay(incoming())
+        && incoming().id == itemId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isOperatorOrAdmin()
+        && isValidId(itemId)
+        && isValidStay(incoming())
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'nama', 'wilayah', 'hargaPerMalam', 'fasilitas',
+          'fasilitasRamahMuslim', 'kontak', 'imageUrl', 'visibility', 'updatedByUid', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(itemId);
+    }
+
+    match /packages/{itemId} {
+      allow get: if isValidId(itemId) && (resource.data.visibility == 'public' || isOperatorOrAdmin());
+      allow list: if resource.data.visibility == 'public' || isBootstrappedAdmin();
+      allow create: if isOperatorOrAdmin()
+        && isValidId(itemId)
+        && isValidPackage(incoming())
+        && incoming().id == itemId
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isOperatorOrAdmin()
+        && isValidId(itemId)
+        && isValidPackage(incoming())
+        && incoming().id == existing().id
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'nama', 'durasi', 'daftarDestinasi', 'estimasiBiaya',
+          'deskripsi', 'minat', 'wilayah', 'imageUrl', 'visibility', 'updatedByUid', 'updatedAt'
+        ]);
+      allow delete: if isAdmin() && isValidId(itemId);
+    }
+
+    // Verification Reports: created by signed-in users, reviewed by Operators/Admins, deleted only by Admin
+    match /verificationReports/{reportId} {
+      allow get: if isSignedIn() && isValidId(reportId)
+        && (resource.data.authorUid == request.auth.uid || isOperatorOrAdmin());
+      allow list: if isSignedIn() && (
+        resource.data.authorUid == request.auth.uid
+        || resource.data.reviewedByUid == request.auth.uid
+        || isBootstrappedAdmin()
+      );
+      allow create: if isVerifiedUser()
+        && isValidId(reportId)
+        && isValidReport(incoming())
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && incoming().id == reportId
+        && incoming().authorUid == request.auth.uid
+        && incoming().status == 'pending'
+        && incoming().resolutionNote == ''
+        && incoming().reviewedByUid == ''
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isOperatorOrAdmin()
+        && isValidId(reportId)
+        && isValidReport(incoming())
+        && incoming().id == existing().id
+        && incoming().authorUid == existing().authorUid
+        && incoming().authorName == existing().authorName
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          (isAdmin()
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'resolutionNote', 'reviewedByUid', 'note', 'updatedAt']))
+          || (existing().status in ['pending', 'in_review']
+            && incoming().status in ['in_review', 'verified', 'rejected']
+            && incoming().reviewedByUid == request.auth.uid
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'resolutionNote', 'reviewedByUid', 'updatedAt']))
+        );
+      allow delete: if isAdmin() && isValidId(reportId);
+    }
+  }
+}
